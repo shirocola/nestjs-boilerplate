@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nestjs-boilerplate
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: nestjs-boilerplate
+  template:
+    metadata:
+      labels:
+        app: nestjs-boilerplate
+    spec:
+      containers:
+        - name: app
+          image: yourdockerhubusername/nestjs-boilerplate:latest
+          ports:
+            - containerPort: 3000
+          env:
+            - name: DB_HOST
+              value: postgres-service
+            - name: DB_PORT
+              value: '5432'
+            - name: DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: db-credentials
+                  key: username
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: db-credentials
+                  key: password
+            - name: DB_DATABASE
+              value: mydatabase

@@ -1,0 +1,28 @@
+# catalog-info.yaml
+
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: my-nestjs-app
+  description: A NestJS application following best practices
+  tags:
+    - nestjs
+    - api
+spec:
+  type: service
+  lifecycle: production
+  owner: team-a
+  providesApis:
+    - my-nestjs-app-api
+---
+apiVersion: backstage.io/v1alpha1
+kind: API
+metadata:
+  name: my-nestjs-app-api
+spec:
+  type: openapi
+  lifecycle: production
+  owner: team-a
+  definition:
+    $text: |
+      # OpenAPI definition here (can be auto-generated)

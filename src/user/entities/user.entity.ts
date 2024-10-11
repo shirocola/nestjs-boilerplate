@@ -1,5 +1,5 @@
-// src/user/entities/user.entity.ts
 import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import { ApiProperty } from '@nestjs/swagger';
 
 /**
  * User entity representing a user in the system.
@@ -7,11 +7,14 @@ import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
 @Entity()
 export class User {
   @PrimaryGeneratedColumn()
+  @ApiProperty({ description: 'Unique identifier of the user' })
   id: number;
 
   @Column()
+  @ApiProperty({ description: 'Name of the user' })
   name: string;
 
-  @Column()
+  @Column({ unique: true })
+  @ApiProperty({ description: 'Email address of the user' })
   email: string;
 }
