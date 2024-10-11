@@ -67,7 +67,8 @@ This project is a NestJS boilerplate designed to meet enterprise-level requireme
 ## Project Setup
 1. **Clone the Repository**
     ```bash
-    git clone https://github.com/yourusername/nestjs-boilerplate.git
+    git clone https://github.com/yourusername/my-nestjs-app.git
+    cd my-nestjs-app
     ```
 
 2. **Install Dependencies**
@@ -77,7 +78,8 @@ This project is a NestJS boilerplate designed to meet enterprise-level requireme
 
 3. **Environment Configuration**
     Create a `.env` file in the root directory and populate it with your environment variables:
-    ```bash
+    ```dotenv
+    # .env
     DB_HOST=localhost
     DB_PORT=5432
     DB_USERNAME=postgres
@@ -99,6 +101,7 @@ This project is a NestJS boilerplate designed to meet enterprise-level requireme
 
 ### Unit Tests
 
+Running Unit Tests:
 ```bash
 npm run test
 ```
@@ -107,6 +110,7 @@ npm run test
 
 ### Integration Tests
 
+Running Integration Tests:
 ```bash
 npm run test:integration
 ```
@@ -115,6 +119,7 @@ npm run test:integration
 
 ### End-to-End Tests
 
+Running End-to-End Tests:
 ```bash
 npm run test:e2e
 ```
@@ -126,26 +131,63 @@ npm run test:e2e
 ### Docker and Docker Compose
 
 **Build the Docker Image**
-
 ```bash
-docker build -t yourdockerhubusername/nestjs-boilerplate:latest .
+docker build -t yourdockerhubusername/my-nestjs-app:latest .
 ```
 
 **Run with Docker Compose**
-
 ```bash
 docker-compose up
 ```
 
+This will start the application along with PostgreSQL and Datadog containers.
+
+**Docker Compose File**
+```yaml
+version: '3.8'
+services:
+  app:
+    build: .
+    ports:
+      - '3000:3000'
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=yourpassword
+      - DB_DATABASE=mydatabase
+    depends_on:
+      - postgres
+      - datadog
+  postgres:
+    image: postgres:14-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: yourpassword
+      POSTGRES_DB: mydatabase
+    ports:
+      - '5432:5432'
+  datadog:
+    image: datadog/agent:latest
+    environment:
+      - DD_API_KEY=your_datadog_api_key
+      - DD_APM_ENABLED=true
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+```
+
 ### Kubernetes Deployment
 
-Kubernetes Deployment and Service Manifests are located in the `k8s/` directory.
+**Kubernetes Manifests**
+- Deployment: `k8s/deployment.yaml`
+- Service: `k8s/service.yaml`
 
-**Apply Kubernetes manifests**
-
+**Apply Kubernetes Manifests**
 ```bash
 kubectl apply -f k8s/
 ```
+
+This will deploy the application to your Kubernetes cluster.
 
 ### Continuous Integration with Azure Pipelines
 
@@ -160,10 +202,9 @@ kubectl apply -f k8s/
 
 ### Continuous Deployment with ArgoCD
 
-- **ArgoCD Application Manifest** is located in the `argocd/` directory.
+- **ArgoCD Application Manifest**: `argocd/application.yaml`
 
 **Register Application with ArgoCD**
-
 ```bash
 kubectl apply -f argocd/application.yaml
 ```
@@ -173,7 +214,6 @@ kubectl apply -f argocd/application.yaml
 - **Main Configuration**: `terraform/main.tf`
 
 **Initialize and Apply Terraform**
-
 ```bash
 cd terraform
 terraform init
@@ -189,22 +229,17 @@ This will provision the necessary Azure resources, including:
 
 ## Monitoring with Datadog
 
-### Setup
-
+**Setup**
 - Datadog Agent is included in the `docker-compose.yml` and Kubernetes manifests.
-- Datadog APM is integrated into the application via the `dd-trace` package.
+- Datadog APM is integrated into the application via `dd-trace` package.
 
-### Environment Variables
-
-Ensure the following environment variables are set:
-
-```bash
+**Environment Variables**
+```dotenv
 DD_API_KEY=your_datadog_api_key
 DD_APM_ENABLED=true
 ```
 
-### Datadog Integration in Application
-
+**Datadog Integration in Application**
 ```typescript
 // main.ts
 import 'dd-trace/init'; // Must be imported before anything else
@@ -217,35 +252,85 @@ bootstrap();
 
 ## Documentation with Swagger
 
-### Accessing Swagger UI
-
+**Accessing Swagger UI**
 After starting the application, navigate to:
-
 ```bash
 http://localhost:3000/api-docs
+```
+
+**Swagger Setup**
+```typescript
+// main.ts
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+
+async function bootstrap() {
+  const app = await NestFactory.create(AppModule);
+
+  // Swagger configuration
+  const config = new DocumentBuilder()
+    .setTitle('My NestJS App')
+    .setDescription('API documentation for My NestJS App')
+    .setVersion('1.0')
+    .build();
+
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('api-docs', app, document);
+
+  await app.listen(process.env.PORT || 3000);
+}
+bootstrap();
 ```
 
 ## Integration with Backstage
 
 ### Catalog Info File
-
 - **File**: `catalog-info.yaml`
 
-**Registering with Backstage**:
-
+**Registering with Backstage**
 1. Ensure Backstage is set up according to the Backstage documentation.
 2. Add the `catalog-info.yaml` file to your repository.
 3. In Backstage, register the component by providing the URL to the `catalog-info.yaml`.
 
+**Catalog Info Example**
+```yaml
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: my-nestjs-app
+  description: A NestJS application following best practices
+  tags:
+    - nestjs
+    - api
+spec:
+  type: service
+  lifecycle: production
+  owner: team-a
+  providesApis:
+    - my-nestjs-app-api
+---
+apiVersion: backstage.io/v1alpha1
+kind: API
+metadata:
+  name: my-nestjs-app-api
+spec:
+  type: openapi
+  lifecycle: production
+  owner: team-a
+  definition:
+    $text: |
+      # OpenAPI definition here (can be auto-generated)
+```
+
 ## Best Practices
 
-- **OOP and SOLID Principles**: Applied throughout the codebase for maintainability and scalability.
-- **Dependency Injection**: Leveraged via NestJS's built-in system for better modularity.
-- **RESTful API Design**: Controllers and routes follow REST principles.
-- **Testing**: Comprehensive testing strategy with unit, integration, and end-to-end tests.
-- **CI/CD**: Automated pipelines for building, testing, and deploying the application.
-- **Infrastructure as Code**: Terraform used for consistent environment provisioning.
-- **Monitoring and Observability**: Datadog integrated for performance monitoring.
+- OOP and SOLID Principles: Applied throughout the codebase for maintainability and scalability.
+- Dependency Injection: Leveraged via NestJS's built-in system for better modularity.
+- RESTful API Design: Controllers and routes follow REST principles.
+- Testing: Comprehensive testing strategy with unit, integration, and end-to-end tests.
+- Code Documentation: Detailed comments and Swagger documentation for API endpoints.
+- CI/CD: Automated pipelines for building, testing, and deploying the application.
+- Infrastructure as Code: Terraform used for consistent environment provisioning.
+- Monitoring and Observability: Datadog integrated for performance monitoring.
 
 ## Contributing
 
@@ -257,9 +342,99 @@ Contributions are welcome! Please follow these steps:
 4. Push to the branch: `git push origin feature/your-feature-name`.
 5. Open a pull request.
 
-**Note**: Replace placeholder values like `yourpassword`, `your_datadog_api_key`, `yourdockerhubusername`, and `yourusername` with your actual credentials and usernames.
-
 ## License
 
-This project is licensed under the [MIT License](LICENSE).
+This project is licensed under the MIT License - see the LICENSE file for details.
 
+---
+
+## Additional Information
+
+**Project Structure**
+```lua
+my-nestjs-app/
+├── src/
+│   ├── app.module.ts
+│   ├── main.ts
+│   ├── user/
+│   │   ├── dto/
+│   │   │   ├── create-user.dto.ts
+│   │   │   └── update-user.dto.ts
+│   │   ├── entities/
+│   │   │   └── user.entity.ts
+│   │   ├── user.controller.ts
+│   │   ├── user.module.ts
+│   │   └── user.service.ts
+│   └── notification/
+│       └── notification.service.ts
+├── test/
+│   ├── app.e2e-spec.ts
+│   ├── user.service.int-spec.ts
+│   └── user.service.spec.ts
+├── .env
+├── Dockerfile
+├── docker-compose.yml
+├── azure-pipelines.yml
+├── k8s/
+│   ├── deployment.yaml
+│   └── service.yaml
+├── argocd/
+│   └── application.yaml
+├── terraform/
+│   └── main.tf
+├── catalog-info.yaml
+├── package.json
+├── tsconfig.json
+├── jest.config.js
+└── README.md
+```
+
+## Setting Up Azure DevOps Pipeline
+
+1. Create a New Pipeline in Azure DevOps pointing to your repository.
+2. Use Existing Azure Pipelines YAML File: Select the option to use the existing `azure-pipelines.yml` in your repository.
+3. Configure Service Connections:
+   - Set up a service connection for your Docker registry.
+   - Update `dockerRegistryServiceConnection` in the `azure-pipelines.yml` with the name of your service connection.
+4. Run the Pipeline: Save and run the pipeline to ensure it works correctly.
+
+## Setting Up ArgoCD
+
+1. Install ArgoCD: Follow the ArgoCD installation guide.
+2. Apply the Application Manifest:
+   ```bash
+   kubectl apply -f argocd/application.yaml
+   ```
+3. Access ArgoCD UI: Use port forwarding or a LoadBalancer to access the ArgoCD UI.
+4. Sync the Application: In the ArgoCD UI, find your application and click "Sync" to deploy it to your cluster.
+
+## Using Terraform for Infrastructure
+
+**Pre-Requisites**
+- Azure CLI: Install and authenticate using `az login`.
+- Terraform Backend: Configure remote state if needed.
+
+**Steps**
+1. **Initialize Terraform**:
+   ```bash
+   terraform init
+   ```
+2. **Plan the Deployment**:
+   ```bash
+   terraform plan -out=tfplan
+   ```
+3. **Apply the Plan**:
+   ```bash
+   terraform apply tfplan
+   ```
+4. **Verify Resources**: Check your Azure portal to verify that the resources are created.
+
+## Environment Variables and Secrets Management
+
+- **Security**: Do not commit sensitive information to version control.
+- **Use Azure Key Vault**: For managing secrets like database passwords and API keys.
+- **Environment Variables**: Use environment variables to pass configuration to the application.
+
+## Contact
+
+For any questions or support, please contact your.email@example.com.
