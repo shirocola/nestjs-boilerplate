@@ -1,46 +1,47 @@
-// test/app.e2e-spec.ts
+import { config as dotenvConfig } from 'dotenv';
+dotenvConfig({ path: '.env.test' });
 
-import * as request from 'supertest';
-import { Test } from '@nestjs/testing';
+process.env.NODE_ENV = 'test';
+
+import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
+import * as request from 'supertest';
+import { DataSource } from 'typeorm'; // Import DataSource
 import { AppModule } from '../src/app.module';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { User } from '../src/user/entities/user.entity';
+
+jest.setTimeout(30000);
 
 describe('AppController (e2e)', () => {
   let app: INestApplication;
+  let dataSource: DataSource;
 
   beforeAll(async () => {
-    const moduleFixture = await Test.createTestingModule({
-      imports: [
-        AppModule,
-        TypeOrmModule.forRoot({
-          type: 'postgres',
-          host: process.env.DB_HOST || 'localhost',
-          port: parseInt(process.env.DB_PORT, 10) || 5432,
-          username: process.env.DB_USERNAME || 'postgres',
-          password: process.env.DB_PASSWORD || 'yourpassword',
-          database: process.env.DB_DATABASE || 'mydatabase',
-          entities: [User],
-          synchronize: true,
-        }),
-      ],
+    const moduleFixture: TestingModule = await Test.createTestingModule({
+      imports: [AppModule],
     }).compile();
 
     app = moduleFixture.createNestApplication();
     await app.init();
+
+    // Get the DataSource instance
+    dataSource = app.get(DataSource);
   });
 
   afterAll(async () => {
+    // Close the database connection
+    await dataSource.destroy();
     await app.close();
   });
 
-  it('/users (GET)', () => {
+  beforeEach(async () => {
+    // Synchronize the database schema
+    await dataSource.synchronize(true);
+  });
+
+  it('/users (GET)', async () => {
     return request(app.getHttpServer())
       .get('/users')
       .expect(200)
       .expect([]);
   });
-
-  // Additional E2E tests...
 });

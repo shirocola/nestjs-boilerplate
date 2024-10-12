@@ -1,15 +1,16 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, OnModuleDestroy } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 // Entities and DTOs
 import { User } from './entities/user.entity';
-import { CreateUserDto, UpdateUserDto } from './dto';
+import { CreateUserDto } from './dto/create-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
 
 /**
  * Service handling business logic for users.
  */
 @Injectable()
-export class UserService {
+export class UserService implements OnModuleDestroy {
   /**
    * Constructs a new UserService.
    * @param userRepository The repository for user entities.
@@ -18,6 +19,14 @@ export class UserService {
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
   ) {}
+
+  /**
+   * Lifecycle hook that is called when the module is destroyed.
+   * You can perform any necessary cleanup here.
+   */
+  onModuleDestroy(): void {
+    // Cleanup logic, if necessary
+  }
 
   /**
    * Retrieves all users.

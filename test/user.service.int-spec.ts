@@ -20,6 +20,7 @@ describe('UserService Integration', () => {
           database: process.env.DB_DATABASE || 'mydatabase',
           entities: [User],
           synchronize: true,
+          dropSchema: true, // Drops the schema on connection
         }),
         TypeOrmModule.forFeature([User]),
       ],

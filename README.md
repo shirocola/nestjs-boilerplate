@@ -250,6 +250,25 @@ async function bootstrap() {
 bootstrap();
 ```
 
+## Test Api
+
+curl -X GET http://localhost:3000/users
+curl -X GET http://localhost:3000/users/1
+curl -X POST http://localhost:3000/users \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "name": "Jane Smith",
+    "email": "janesmith@example.com"
+  }'
+curl -X PUT http://localhost:3000/users/1 \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "name": "John Doe Updated",
+    "email": "john.doe.updated@example.com"
+  }'
+curl -X DELETE http://localhost:3000/users/1
+
+
 ## Documentation with Swagger
 
 **Accessing Swagger UI**
